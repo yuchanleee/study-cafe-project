@@ -1,14 +1,19 @@
 from fastapi import FastAPI
-from backend.database import database
-from backend.models import metadata
+from database import database
+from models import metadata
 from sqlalchemy import create_engine
 from contextlib import asynccontextmanager
-from routes import user 
+from routes import user, protected
+from dotenv import load_dotenv
+import os
+
+load_dotenv() #.env 파일 읽기
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 app = FastAPI() # FastAPI 앱 객체 생성
 
 # DB 초기화용 엔진 (테이블 생성에 필요)
-engine = create_engine("sqlite:///./test.db")
+engine = create_engine(DATABASE_URL)
 metadata.create_all(engine)
 
 @asynccontextmanager
@@ -19,6 +24,7 @@ async def lifespan(app: FastAPI):
 
 app=FastAPI(lifespan=lifespan)
 app.include_router(user.router)
+app.include_router(protected.router)
 
 @app.get("/")
 async def root():

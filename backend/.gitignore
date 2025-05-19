@@ -16,3 +16,6 @@ __pycache__/
 
 # 데이터베이스 파일 (SQLite)
 *.db
+
+# 메모
+memo.txt
