@@ -1,21 +1,14 @@
-# FastAPI에서 라우터(경로 관리)를 위한 모듈
 from fastapi import APIRouter, HTTPException
-
 # 사용자의 입력값을 검증하고 구조화할 수 있는 도구 (Pydantic의 BaseModel)
 from pydantic import BaseModel
-
 # 우리가 만든 비동기 DB 연결 객체
 from database import database
-
 # users 테이블 정의가 담긴 models.py에서 users 불러옴
 from models import users
-
 # 가입일 저장을 위한 현재 시간 모듈
 from datetime import datetime, timezone, timedelta
-
 # JWT 생성을 위한 라이브러리 
 from jose import jwt
-
 # FastAPI 라우터 객체 생성 (user 관련 경로 전용)
 router = APIRouter()
 
