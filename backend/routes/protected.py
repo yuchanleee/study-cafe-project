@@ -17,7 +17,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 router = APIRouter()
 
 # JWT 토큰 검증 함수
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> int:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="유효하지 않은 인증입니다.",
@@ -27,20 +27,20 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
         # 토큰 디코드해서 payload 추출
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        phone_number: str = payload.get("sub")
+        user_id_str: str = payload.get("sub")
 
-        # phone_number가 없다면 인증 실패
-        if phone_number is None:
+        if user_id_str is None:
             raise credentials_exception
 
-        return phone_number
+        return int(user_id_str)
+
     except JWTError:
         raise credentials_exception
 
 # 보호된 API 예시 (/me)
 @router.get("/me")
-async def read_users_me(current_user: str = Depends(get_current_user)):
+async def read_users_me(user_id: int = Depends(get_current_user)):
     return {
         "message": "로그인한 사용자만 볼 수 있는 정보입니다.",
-        "phone_number": current_user
+        "user_id": user_id
     }

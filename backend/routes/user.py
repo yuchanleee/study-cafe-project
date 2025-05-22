@@ -94,7 +94,7 @@ async def login(user: UserLogin):
     # 3. 있다면 JWT 토큰 생성
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     token = create_access_token(
-        data={"sub": user.phone_number},  # sub(subject)는 토큰 주체(여기서는 전화번호)
+        data={"sub": str(existing_user["id"])},  # sub(subject)는 토큰 주체
         expires_delta=access_token_expires
     )
 
