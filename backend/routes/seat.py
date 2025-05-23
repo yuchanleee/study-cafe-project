@@ -47,13 +47,34 @@ async def get_seat_status(user_id: int = Depends(get_current_user)):
                 now = datetime.now(timezone.utc)
 
                 if user_pass["expire_at"]:
-                    remaining_delta = user_pass["expire_at"] - now
+                    expire_at = user_pass["expire_at"].replace(tzinfo=timezone.utc) # sqlite에서는 timezone을 지원 안해서 저장은 utc로, 사용할때는 수동 보정 
+                    remaining_delta = expire_at - now
                     remaining_time = max(int(remaining_delta.total_seconds() // 60), 0)
 
-                elif user_pass["remaining_time"] is not None:
+                elif user_pass["remaining_time"]:
                     # 예: 남은 시간이 직접 저장된 경우
                     usetime_delta = now - seat["start_at"]
                     remaining_time = max(int(user_pass["remaining_time"] - int(usetime_delta.total_seconds() // 60)),0)
+                
+
+                # 남은 시간이 0 이하라면 만료 처리
+                if remaining_time is not None and remaining_time <= 0:
+                    # 1. 좌석 비우기
+                    seat_update = (
+                        seats.update()
+                        .where(seats.c.id == seat["id"])
+                        .values(is_occupied=False, user_pass_id=None, start_at=None)
+                    )
+                    await database.execute(seat_update)
+
+                    # 2. user_pass 만료처리: 삭제
+                    delete_pass = user_passes.delete().where(user_passes.c.id == user_pass["id"])
+                    await database.execute(delete_pass)
+
+                    # 3. 반환용 데이터
+                    occupant_user_pass_id = None
+                    remaining_time = None
+
 
                 occupant_remaining_time = remaining_time
 

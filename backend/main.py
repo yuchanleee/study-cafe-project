@@ -3,7 +3,7 @@ from database import database
 from models import metadata
 from sqlalchemy import create_engine
 from contextlib import asynccontextmanager
-from routes import user, protected, passes
+from routes import user, protected, passes, seat
 from dotenv import load_dotenv
 import os
 
@@ -26,6 +26,7 @@ app=FastAPI(lifespan=lifespan)
 app.include_router(user.router)
 app.include_router(protected.router)
 app.include_router(passes.router)
+app.include_router(seat.router)
 @app.get("/")
 async def root():
     return {"message": "스터디카페 앱 API 시작!"}

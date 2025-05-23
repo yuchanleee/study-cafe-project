@@ -116,7 +116,92 @@ async def occupy_seat(request: SeatRequest, user_id: int = Depends(get_current_u
     await database.execute(
         seats.update()
         .where(seats.c.id == request.seat_id)
-        .values(is_occupied=True, user_pass_id=request.user_pass_id, started_at=now)
+        .values(is_occupied=True, user_pass_id=request.user_pass_id, start_at=now)
     )
 
     return {"message": "좌석 착석 완료", "seat_id": request.seat_id}
+
+# 퇴실처리
+@router.post("/leave")
+async def leave_seat(user_id: int = Depends(get_current_user)):
+    """
+    좌석 퇴실 처리 API. 사용자가 착석 중인 좌석이 있으면 퇴실 처리하고,
+    남은 시간을 user_passes에 저장함.
+    """
+    # 1. 사용자가 착석 중인 좌석 찾기 
+    query = seats.select().where(seats.c.is_occupied == True)
+    seat_records = await database.fetch_all(query)
+
+    user_seat = None
+    for seat in seat_records:
+        # 해당 좌석의 user_pass_id로 user_passes 확인
+        user_pass_query = user_passes.select().where(user_passes.c.id == seat["user_pass_id"])
+        user_pass = await database.fetch_one(user_pass_query)
+
+        if user_pass and user_pass["user_id"] == user_id:
+            user_seat = seat
+            break
+    
+    if not user_seat:
+        raise HTTPException(status_code=404, detail="퇴실 처리할 좌석이 없습니다.")
+    
+    # 2. user_pass의 남은 시간 계산
+
+    user_pass_query = user_passes.select().where(user_passes.c.id == user_seat["user_pass_id"])
+    user_pass = await database.fetch_one(user_pass_query)
+    now = datetime.now(timezone.utc)
+    
+    if user_pass["remaining_time"] is not None:
+        elapsed_minutes = int((now - user_pass["started_at"]).total_seconds() // 60)
+        update_remaining_time = user_pass["remaining_time"] - elapsed_minutes
+
+        # user_pass 만료처리: 삭제
+        if update_remaining_time <=0:
+                delete_pass = user_passes.delete().where(user_passes.c.id == user_seat["user_pass_id"])
+                await database.execute(delete_pass)
+
+        # 시간이 남았다면 이용권 남은시간 갱신 
+        else:
+            await database.execute(
+                user_passes.update()
+                .where(user_passes.c.id == user_pass["id"])
+                .values(
+                    remaining_time=update_remaining_time,
+                    is_active=False,
+                    seat_id=None
+                )
+            )
+    
+    else:
+        # user_pass 만료처리: 삭제
+        expire_at = user_pass["expire_at"].replace(tzinfo=timezone.utc) # sqlite에서는 timezone을 지원 안해서 저장은 utc로, 사용할때는 수동 보정 
+        elapsed_minutes = expire_at - now
+        update_remaining_time = int(elapsed_minutes.total_seconds() // 60)
+
+        if update_remaining_time <=0:
+                delete_pass = user_passes.delete().where(user_passes.c.id == user_seat["user_pass_id"])
+                await database.execute(delete_pass)
+
+        else:
+            # 기간 남았다면 그대로 저장
+            await database.execute(
+                user_passes.update()
+                .where(user_passes.c.id == user_pass["id"])
+                .values(
+                    is_active=False,
+                    seat_id=None
+                )
+            )
+    
+    # 3. 좌석 비우기
+    await database.execute(
+        seats.update()
+        .where(seats.c.id == user_seat["id"])
+        .values(
+            is_occupied=False,
+            user_pass_id=None,
+            start_at=None
+        )
+    )
+
+    return {"message": "퇴실 처리가 완료되었습니다."}
