@@ -1,0 +1,13 @@
+.signup-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* 제목을 위쪽으로 띄우기 */
+    min-height: 100vh;
+    /* 화면 전체 높이 확보 */
+    background-color: #ffff;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    box-sizing: border-box;
+}

@@ -1,0 +1,111 @@
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #ffff;
+    padding: 2rem;
+    border-radius: 12px;
+    gap: 1rem;
+}
+
+.phone-wrapper {
+    width: 300px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    border: 2px solid #2e7d32;
+    border-radius: 25px;
+    padding: 0.75rem 1rem;
+    background-color: #fff;
+    width: 300px;
+    font-size: 1rem;
+}
+
+.phone-prefix {
+    color: #000;
+    font-size: 1rem;
+    white-space: nowrap;
+}
+
+.phone-input {
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    flex: 1;
+    background-color: transparent;
+    text-align: left;
+}
+
+input {
+    width: 300px;
+    height: 30px;
+    padding: 0.75rem 1rem;
+    border: 2px solid #2e7d32;
+    /* 초록색 테두리 */
+    border-radius: 25px;
+    /* 타원형 느낌 */
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s;
+    background-color: #fff;
+}
+
+input:focus {
+    border-color: #1b5e20;
+    /* 포커스 시 더 진한 초록색 */
+}
+
+.phone-input::placeholder {
+    padding-left: 60px;
+    text-align: left;
+}
+
+input::placeholder {
+    text-align: center;
+}
+
+.button-group2 {
+    display: flex;
+    align-items: center;
+    position: relative;
+    margin-top: 2rem;
+    width: 100%;
+
+}
+
+.submit-btn {
+    position: absolute;
+    left: 0;
+    padding: 0.8rem 2.5rem;
+    font-size: 1.15rem;
+    border-radius: 25px;
+    cursor: pointer;
+    border: none;
+    background-color: #2e7d32;
+    color: white;
+    transition: background-color 0.3s;
+    margin-top: 0;
+}
+
+.home-btn {
+    position: absolute;
+    right: 0;
+    padding: 0.8rem 2.5rem;
+    font-size: 1.15rem;
+    border-radius: 25px;
+    cursor: pointer;
+    border: none;
+    background-color: #2e7d32;
+    color: white;
+    transition: background-color 0.3s;
+}
+
+.button-group2 button:hover {
+    background-color: #1b5e20;
+}
+
+.error-text {
+    color: red;
+    font-size: 0.9rem;
+    margin-top: -0.5rem;
+}

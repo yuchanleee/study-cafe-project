@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from database import database
 from models import metadata
 from sqlalchemy import create_engine
@@ -23,6 +24,17 @@ async def lifespan(app: FastAPI):
     await database.disconnect()
 
 app=FastAPI(lifespan=lifespan)
+
+# CORS 미들웨어 추가 (React 프론트엔드 기본 주소 허용)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # 프론트엔드 주소에 맞게 수정 가능
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 라우터 등록
 app.include_router(user.router)
 app.include_router(protected.router)
 app.include_router(passes.router)
