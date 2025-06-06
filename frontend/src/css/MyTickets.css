@@ -1,0 +1,92 @@
+.mytickets-container {
+    display: flex;
+    height: 100vh;
+    font-family: sans-serif;
+}
+
+.sidebar {
+    width: 200px;
+    background-color: #f3f3f3;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-right: 1px solid #ddd;
+}
+
+.menu-button {
+    padding: 12px;
+    font-weight: bold;
+    border: none;
+    background-color: transparent;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.menu-button.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.menu-button:hover {
+    background-color: #e0e0e0;
+}
+
+.content {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+}
+
+.ticket-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ticket-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 24px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    background-color: #f9f9f9;
+}
+
+.active-card {
+    background-color: #e6ffe6;
+    border-color: #33cc66;
+}
+
+.inactive-card {
+    background-color: #eeeeee;
+    border-color: #cccccc;
+}
+
+.status {
+    margin-top: 8px;
+    font-weight: bold;
+    color: #666;
+}
+
+.slider-buttons,
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.loading,
+.empty {
+    padding: 24px;
+    font-size: 1.2rem;
+}

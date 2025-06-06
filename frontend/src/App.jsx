@@ -7,6 +7,7 @@ import './css/Home.css';
 import "./css/Login.css";
 import "./css/Signup.css";
 import './css/SignupForm.css';
+import './css/MyTickets.css';
 
 function App() {
   return (

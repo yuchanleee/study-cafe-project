@@ -49,13 +49,24 @@ function SignupForm() {
             });
 
             if (response.status === 200 || response.status === 201) {
+                alert("회원가입이 완료되었습니다.");
                 navigate("/"); // 홈으로 이동
             } else {
                 setError("회원가입에 실패했습니다. 다시 시도해주세요.");
             }
         } catch (error) {
-            console.error("회원가입 오류:", error);
-            setError("회원가입 중 오류가 발생했습니다.");
+            if (error.response) {
+                const status = error.response.status;
+                const detail = error.response.data?.detail; // 존재하면 detail 가져오고 없으면 undefined 반환
+
+                if (status === 400 && detail === "이미 등록된 번호입니다.") {
+                    setError("이미 존재하는 회원입니다.");
+                } else {
+                    setError(detail || `회원가입 중 오류가 발생했습니다. (${status})`);
+                }
+            } else {
+                setError("서버에 연결할 수 없습니다.");
+            }
         }
     };
 
