@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, tzinfo
 from database import database
 from models import passes, user_passes, users, purchase_logs, seats
 from routes.protected import get_current_user
 from typing import List, Optional
+import pytz
+KST = pytz.timezone("Asia/Seoul")
 router = APIRouter()
 
 # 구매 요청 받을 데이터 형식
@@ -23,8 +25,27 @@ class UserPassResponse(BaseModel):
 
 # 착석 처리 데이터 형식
 class SeatRequest(BaseModel):
+    seat_id: str
     user_pass_id: int
-    seat_id: int
+
+
+# 사용자 이름 가져오기
+@router.get("/me")
+async def read_users_me(user_id: int = Depends(get_current_user)):
+    query = users.select().where(users.c.id == user_id)
+    user = await database.fetch_one(query)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자 정보를 찾을 수 없습니다.")
+
+    return {"name": user["name"]}
+
+# 전체 이용권 목록 조회
+@router.get("/passes")
+async def get_all_passes():
+    query = passes.select().order_by(passes.c.id)
+    result = await database.fetch_all(query)
+    return result
 
 # 이용권 구매
 @router.post("/purchase")
@@ -38,7 +59,7 @@ async def purchase_pass(request: PurchaseRequest, user_id: int = Depends(get_cur
 
 
     # 2. user_passes에 구매 정보 생성
-    now = datetime.now(timezone.utc)
+    now = datetime.now(KST)
     values = {
         "user_id": user_id,
         "pass_id": selected_pass["id"],
@@ -75,35 +96,66 @@ async def purchase_pass(request: PurchaseRequest, user_id: int = Depends(get_cur
 # 사용자 이용권 보유 현황
 @router.get("/user/passes", response_model=List[UserPassResponse])
 async def get_user_passes(user_id: int = Depends(get_current_user)):
+    now = datetime.now(KST)
 
-    # 1. user_passes + passes 조인해서 사용자 보유 이용권 가져오기
+    # user_passes + passes 조인
     join_query = (
         user_passes.join(passes, user_passes.c.pass_id == passes.c.id)
         .select()
         .where(user_passes.c.user_id == user_id)
     )
+    records = await database.fetch_all(join_query)
 
-    result = await database.fetch_all(join_query)
+    valid_passes = []
 
-    # 2. 포맷팅해서 응답 (Class 인데 클라이언트에게 JSON 배열 형태로 응답 보냄)
-    return [
-        UserPassResponse(
-            user_pass_id=record["id"],
-            pass_id=record["pass_id"],
-            name=record["name"],
-            pass_type=record["pass_type"],
-            remaining_time=record["remaining_time"],
-            expire_at=record["expire_at"],
-            is_active=record["is_active"],
-        )
-        for record in result
-    ]
+    for record in records:
+        pass_type = record["pass_type"]
+        expired = False
+
+        if pass_type in ["time", "day"]:
+            expire_at = record["expire_at"].replace(tzinfo=timezone.utc)
+            if expire_at < now:
+                await database.execute(
+                    user_passes.delete().where(user_passes.c.id == record["id"])
+                )
+                expired = True
+
+        elif pass_type == "time_period":
+            if record["remaining_time"] is not None and record["remaining_time"] <= 0:
+                await database.execute(
+                    user_passes.delete().where(user_passes.c.id == record["id"])
+                )
+                expired = True
+
+        if not expired:
+            valid_passes.append(
+                UserPassResponse(
+                    user_pass_id=record["id"],
+                    pass_id=record["pass_id"],
+                    name=record["name"],
+                    pass_type=pass_type,
+                    remaining_time=record["remaining_time"],
+                    expire_at=record["expire_at"],
+                    is_active=record["is_active"],
+                )
+            )
+
+    return valid_passes
+
 
 # 착석처리 
 @router.post("/seat")
 async def occupy_seat(request: SeatRequest, user_id: int = Depends(get_current_user)):
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(KST)
+
+    # 이미 점유된 좌석인지 확인 
+    seat_record = await database.fetch_one(
+        seats.select().where(seats.c.id == request.seat_id)
+    )
+
+    if seat_record and seat_record["is_occupied"]:
+        raise HTTPException(status_code=400, detail="이미 점유된 좌석입니다")
 
     # user_passes 업데이트: 좌석 지정, 착석 시간 기록, 활성화 처리
     await database.execute(
@@ -149,7 +201,7 @@ async def leave_seat(user_id: int = Depends(get_current_user)):
 
     user_pass_query = user_passes.select().where(user_passes.c.id == user_seat["user_pass_id"])
     user_pass = await database.fetch_one(user_pass_query)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(KST)
     
     if user_pass["remaining_time"] is not None:
         elapsed_minutes = int((now - user_pass["started_at"]).total_seconds() // 60)

@@ -41,8 +41,7 @@ user_passes = Table(
 seats = Table(
     "seats",
     metadata,
-    Column("id", Integer, primary_key=True),
-    Column("name", String, unique=True),  # 예: A1, A2...
+    Column("id", String, primary_key=True),
     Column("is_occupied", Boolean, default=False),
     Column("user_pass_id", Integer, nullable=True),
     Column("start_at", DateTime(timezone=True), nullable=True)

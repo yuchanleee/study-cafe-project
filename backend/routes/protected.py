@@ -36,11 +36,3 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> int:
 
     except JWTError:
         raise credentials_exception
-
-# 보호된 API 예시 (/me)
-@router.get("/me")
-async def read_users_me(user_id: int = Depends(get_current_user)):
-    return {
-        "message": "로그인한 사용자만 볼 수 있는 정보입니다.",
-        "user_id": user_id
-    }

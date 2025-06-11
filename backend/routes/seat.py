@@ -1,15 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Optional
 from pydantic import BaseModel
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, tzinfo
 from database import database
 from models import seats, user_passes, passes
 from routes.protected import get_current_user
-
+import pytz
+KST = pytz.timezone("Asia/Seoul")
 router=APIRouter()
 
 class SeatStatusResponse(BaseModel):
-    seat_id: int
+    seat_name: str
     is_occupied: bool
     occupant_user_pass_id: Optional[int] = None
     occupant_remaining_time: Optional[int] = None  # 분 단위로 예시
@@ -44,7 +45,7 @@ async def get_seat_status(user_id: int = Depends(get_current_user)):
 
                 # 남은 시간 계산 (분 단위)
                 remaining_time = None
-                now = datetime.now(timezone.utc)
+                now = datetime.now(KST)
 
                 if user_pass["expire_at"]:
                     expire_at = user_pass["expire_at"].replace(tzinfo=timezone.utc) # sqlite에서는 timezone을 지원 안해서 저장은 utc로, 사용할때는 수동 보정 
@@ -53,7 +54,8 @@ async def get_seat_status(user_id: int = Depends(get_current_user)):
 
                 elif user_pass["remaining_time"]:
                     # 예: 남은 시간이 직접 저장된 경우
-                    usetime_delta = now - seat["start_at"]
+                    start_at = seat["start_at"].replace(tzinfo=KST)
+                    usetime_delta = now - start_at
                     remaining_time = max(int(user_pass["remaining_time"] - int(usetime_delta.total_seconds() // 60)),0)
                 
 
@@ -84,7 +86,7 @@ async def get_seat_status(user_id: int = Depends(get_current_user)):
 
         seat_status_list.append(
             SeatStatusResponse(
-                seat_id=seat["id"],
+                seat_name=seat["id"],
                 is_occupied=seat["is_occupied"],
                 occupant_user_pass_id=occupant_user_pass_id,
                 occupant_remaining_time=occupant_remaining_time,

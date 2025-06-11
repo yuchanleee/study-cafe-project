@@ -6,12 +6,14 @@ from database import database
 # users 테이블 정의가 담긴 models.py에서 users 불러옴
 from models import users
 # 가입일 저장을 위한 현재 시간 모듈
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, tzinfo
 # JWT 생성을 위한 라이브러리 
 from jose import jwt
 # FastAPI 라우터 객체 생성 (user 관련 경로 전용)
 router = APIRouter()
 
+import pytz
+KST = pytz.timezone("Asia/Seoul")
 from dotenv import load_dotenv
 import os
 
@@ -40,7 +42,7 @@ def create_access_token(data: dict, expires_delta: timedelta):
     주어진 사용자 정보(data)와 만료시간을 바탕으로 JWT 액세스 토큰을 생성합니다.
     """
     to_encode = data.copy()  # 원본을 복사해서 수정
-    expire = datetime.now(timezone.utc) + expires_delta  # 현재 시간 + 만료 시간 설정
+    expire = datetime.now(KST) + expires_delta  # 현재 시간 + 만료 시간 설정
     to_encode.update({"exp": expire})  # JWT에는 만료 시간(exp) 필드가 필요함
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)  # JWT 토큰 생성
     return encoded_jwt
@@ -67,7 +69,7 @@ async def signup(user: UserCreate):
         name=user.name,
         age=user.age,
         phone_number=user.phone_number,
-        created_at=datetime.now(timezone.utc)  # 가입 시간은 서버에서 자동 설정
+        created_at=datetime.now(KST)  # 가입 시간은 서버에서 자동 설정
     )
     await database.execute(query)
 

@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import MyTickets from "./pages/MyTickets";
+import Seatstatus from "./pages/Seatstatus";
 import './css/Home.css';
 import "./css/Login.css";
 import "./css/Signup.css";
@@ -17,6 +18,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/mytickets" element={<MyTickets />} />
+        <Route path="/mytickets/Seatstatus" element={<Seatstatus />} />
       </Routes>
     </BrowserRouter>
   );
