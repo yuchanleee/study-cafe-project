@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
+import LeaveButton from "../components/LeaveButton";
 
 const MyTickets = () => {
     const navigate = useNavigate();
@@ -173,7 +174,7 @@ const MyTickets = () => {
                             )}
 
                             <div className="action-buttons">
-                                <button disabled={!tickets[currentIndex].is_active}>퇴실/로그아웃</button>
+                                <LeaveButton isActive={tickets[currentIndex]?.is_active} seatId={tickets[currentIndex]?.seat_id}></LeaveButton>
                                 <button
                                     onClick={() => navigate('/mytickets/Seatstatus', {
                                         state: { user_pass_id: tickets[currentIndex].user_pass_id }

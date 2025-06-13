@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import SvgComponent from '../components/SvgComponent';
 import axios from "axios";
 
 const Seatstatus = () => {
     const location = useLocation();
     const { user_pass_id } = location.state || {};
+    const navigate = useNavigate();
 
 
     const handleSeatClick = async (seatId) => {
@@ -26,7 +27,7 @@ const Seatstatus = () => {
             );
             console.log("착석 성공:", res.data);
             // UI 업데이트 등 추가 동작 필요 시 여기에
-            alert(`${seatID}좌석에 착석이 완료되었습니다.`);
+            alert(`${seatId}좌석에 착석이 완료되었습니다.`);
             navigate("/mytickets");
 
         } catch (error) {

@@ -48,13 +48,13 @@ async def get_seat_status(user_id: int = Depends(get_current_user)):
                 now = datetime.now(KST)
 
                 if user_pass["expire_at"]:
-                    expire_at = user_pass["expire_at"].replace(tzinfo=timezone.utc) # sqlite에서는 timezone을 지원 안해서 저장은 utc로, 사용할때는 수동 보정 
+                    expire_at = KST.localize(user_pass["expire_at"])
                     remaining_delta = expire_at - now
                     remaining_time = max(int(remaining_delta.total_seconds() // 60), 0)
 
                 elif user_pass["remaining_time"]:
                     # 예: 남은 시간이 직접 저장된 경우
-                    start_at = seat["start_at"].replace(tzinfo=KST)
+                    start_at = KST.localize(seat["start_at"])
                     usetime_delta = now - start_at
                     remaining_time = max(int(user_pass["remaining_time"] - int(usetime_delta.total_seconds() // 60)),0)
                 

@@ -34,7 +34,7 @@ user_passes = Table(
     Column("expire_at", DateTime(timezone=True), nullable=True), # 기간권, 일일권용 
     Column("remaining_time", Integer, nullable=True),            
     Column("is_active", Boolean, nullable=False),
-    Column("seat_id", Integer, ForeignKey("seats.id"), nullable=True),
+    Column("seat_id", String, ForeignKey("seats.id"), nullable=True),
 
 )
 
